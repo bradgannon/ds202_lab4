@@ -1,0 +1,37 @@
+---
+title: "team"
+output: html_document
+---
+
+#Clean data
+
+```{r}
+library("tidyverse")
+library("readxl") # to import Excel file
+
+defense <- read_excel("cyclonesFootball2018.xlsx", sheet="Defensive")
+offense <- read_excel("cyclonesFootball2018.xlsx", sheet="Offensive")
+biography <- read_excel("cyclonesFootball2018.xlsx", sheet="Biography")
+
+# Player names and opponent names as factors
+defense$Name <- as.factor(defense$Name)
+defense$Opponent_Opponent <- as.factor(defense$Opponent_Opponent)
+offense$Name <- as.factor(offense$Name)
+offense$Opponent_Opponent <- as.factor(offense$Opponent_Opponent)
+biography$Name <- as.factor(biography$Name)
+
+# All offensive and defensive statistics are numeric. Weight column in biography is also numeric.
+defense <- defense %>% mutate_at(c('Tackles_Solo','Tackles_ASST','Tackles_TFL','Tackles_Sack','Turnover_FF','Turnover_FR','Turnover_INT','Pass_QBH','Pass_PB'), as.numeric)
+
+offense <- offense %>% mutate_at(c('Receiving_REC','Receiving_YDS','Receiving_TD','Rushing_ATT','Rushing_YDS','Rushing_TD','Passing_CMP-ATT','Passing_YDS'), as.numeric)
+
+biography$Weight <- as.numeric(biography$Weight)
+
+# Change Height column in biography into numeric (using a unit that works well)
+biography$Height <- sapply(strsplit(as.character(biography$Height), '-'), function(x){12*as.numeric(x[1]) + as.numeric(x[2])})
+# The measurement is now in total inches
+
+defClean <- defense
+offClean <- offense
+bioClean <- biography
+```
