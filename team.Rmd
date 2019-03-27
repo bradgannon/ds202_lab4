@@ -3,7 +3,7 @@ title: "team"
 output: html_document
 ---
 
-#Clean data
+##Clean data
 
 ```{r}
 library("tidyverse")
@@ -34,4 +34,44 @@ biography$Height <- sapply(strsplit(as.character(biography$Height), '-'), functi
 defClean <- defense
 offClean <- offense
 bioClean <- biography
+data <- defClean
+```
+
+##Part Two: Tidying
+```{r}
+defClean <- gather(defClean, key='Statistic', value='Amount', Tackles_Solo:Pass_PB, na.rm=TRUE)
+
+p <- ggplot(defClean, aes(x=Amount)) + geom_histogram(bins=10) + facet_wrap(~defClean$Statistic)
+p <- p + xlab("Value of Statistic") + ylab('Occurences') + ggtitle('Amount of Occurences per Defensive Statistic')
+p
+
+data <- data %>% select(Name, Opponent_Opponent, Tackles_Solo) %>% spread(Opponent_Opponent, Tackles_Solo, fill=0)
+data <- data %>% select(Name, 'West Virginia', 'Kansas State')
+
+p <- ggplot(data, aes(x=`West Virginia`, y=`Kansas State`)) + geom_point() + geom_smooth(method=lm, se=FALSE)
+p <- p + xlab("West Virginia") + ylab("Kansas State") + ggtitle("Solo Tackles of WVU vs. KSU")
+p
+
+bioClean <- separate(bioClean, Hometown, c('City', 'State'), ', ')
+head(bioClean, 3)
+
+p <- ggplot(bioClean, aes(x=State, color=State)) + geom_bar() + theme(axis.text.x = element_text(angle = 90))
+p <- p + ylab('Number of Players') + ggtitle('Number of ISU Football Players by State')
+p
+```
+
+##Part Three: Joining Data Frames
+```{r}
+combo <- merge(bioClean, offClean, by='Name')
+
+# Find where offensive players come from by joining offensive data and biography data appropriately
+
+p <- ggplot(combo, aes(x=State, color=State)) + geom_bar() + theme(axis.text.x = element_text(angle = 90))
+p <- p + ylab('Number of Players') + ggtitle('Number of Offensive Players by State')
+p
+
+#2 here
+
+
+#3 here
 ```

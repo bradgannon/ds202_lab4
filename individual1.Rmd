@@ -50,5 +50,93 @@ biography$Height <- sapply(strsplit(as.character(biography$Height), '-'), functi
 defClean <- defense
 offClean <- offense
 bioClean <- biography
+
+data <- defClean # Will be used below because graphing was easier with un-gathered dataframe
 ```
 
+#Part Two: Tidying Data (1)
+
+###1.
+```{r}
+# Reformat defClean dataframe into a tidy format using gather
+# I essentially narrowed the dataframe by grouping all defensive statistics by name
+defClean <- gather(defClean, key='Statistic', value='Amount', Tackles_Solo:Pass_PB, na.rm=TRUE)
+```
+
+###2.
+```{r}
+# Create histogram for each defensive statistic (using facet wrap)
+p <- ggplot(defClean, aes(x=Amount)) + geom_histogram(bins=10) + facet_wrap(~defClean$Statistic)
+p <- p + xlab("Value of Statistic") + ylab('Occurences') + ggtitle('Amount of Occurences per Defensive Statistic')
+p
+```
+
+###3.
+```{r}
+# Did ISU have better defense against West Virginia or Kansas State?
+
+# Using 'data' dataframe declared above because gathered version of defClean was difficult to navigate
+
+data <- data %>% select(Name, Opponent_Opponent, Tackles_Solo) %>% spread(Opponent_Opponent, Tackles_Solo, fill=0)
+data <- data %>% select(Name, 'West Virginia', 'Kansas State')
+
+p <- ggplot(data, aes(x=`West Virginia`, y=`Kansas State`)) + geom_point() + geom_smooth(method=lm, se=FALSE)
+p <- p + xlab("West Virginia") + ylab("Kansas State") + ggtitle("Solo Tackles of WVU vs. KSU")
+p
+
+# The trend line seems to show the Kansas State game had slightly better defense than the West Virginia game
+```
+
+#Part Two: Tidying Data (2)
+
+###1.
+```{r}
+# Separate Hometown column into two columns (city and state). Print first few rows of these two columns
+
+bioClean <- separate(bioClean, Hometown, c('City', 'State'), ', ')
+head(bioClean, 3)
+```
+
+###2.
+```{r}
+# How many players are from each state?
+
+p <- ggplot(bioClean, aes(x=State, color=State)) + geom_bar() + theme(axis.text.x = element_text(angle = 90))
+p <- p + ylab('Number of Players') + ggtitle('Number of ISU Football Players by State')
+p # Much more players from Iowa than I expected
+```
+
+#Part Three: Joining Data Frames
+
+###1.
+```{r}
+# Join dataframes
+
+combo <- merge(bioClean, offClean, by='Name')
+
+# Find where offensive players come from by joining offensive data and biography data appropriately
+
+p <- ggplot(combo, aes(x=State, color=State)) + geom_bar() + theme(axis.text.x = element_text(angle = 90))
+p <- p + ylab('Number of Players') + ggtitle('Number of Offensive Players by State')
+p
+```
+
+###2.
+```{r}
+# Is there a relationship between the weight of a player and receiving yards?
+
+p <- ggplot(combo, aes(x=Weight, y=Receiving_YDS, fill=Name)) + geom_bar(stat='identity')
+p <- p + ylab('Receiving Yards (season)') + ggtitle('Receiving Yards by Weight (labeled by Player)')
+p
+```
+
+###3.
+```{r}
+# I want to look at receiving receptions by class (had to merge offClean and bioClean)
+
+p <- ggplot(combo, aes(x=Class, y=Receiving_REC, fill=Name)) + geom_bar(stat='identity')
+p <- p + theme(axis.text.x = element_text(angle = 90)) + ylab('Receptions') + ggtitle('Receptions by Class')
+positions <- c('Freshman', 'Redshirt Freshman', 'Sophomore', 'Redshirt Sophomore', 'Junior', 'Redshirt Junior', 'Senior', 'Redshirt Senior')
+p <- p + scale_x_discrete(limits = positions)
+p
+```
