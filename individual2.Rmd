@@ -1,0 +1,119 @@
+---
+title: "individual2.Rmd"
+author: "Seydou Yacouba"
+date: "March 26, 2019"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(readxl)
+```
+
+#load defense
+```{r}
+defense <- read_excel('cyclonesFootball2018.xlsx', sheet='Defensive')
+str(defense)
+```
+
+#load offense
+```{r}
+Offensive <- read_excel('cyclonesFootball2018.xlsx', sheet='Offensive') 
+str(Offensive)
+```
+
+
+#load biography
+```{r}
+biography <- read_excel('cyclonesFootball2018.xlsx', sheet='Biography')
+str(biography)
+```
+
+
+##The player names and opponent names are factors.
+#All offensive and defensive statistics are numerical. 
+#The Weight column in biogrpahy is also numeric. 
+```{r}
+defClean <- defense %>%
+  mutate_at(c("Name", "Opponent_Opponent"), as.factor) %>% #1
+  mutate_at(names(defense)[3:11], as.numeric) #2
+str(defClean)
+```
+```{r}
+offClean <- Offensive %>%
+  mutate_at(c("Name", "Opponent_Opponent"), as.factor) %>% #1
+  mutate_at(names(Offensive)[3:11], as.numeric) #1
+str(offClean)
+```
+```{r}
+bioClean <- biography %>%
+  mutate_at(c("Name"), as.factor) %>% #1
+  mutate_at(c("Weight"), as.numeric) #2
+str(bioClean)
+```
+
+
+#Bonus
+```{r}
+bioClean <- bioClean %>%
+  separate(Height, c("feet", "inch"), "-") %>%
+  mutate_at(c("feet", "inch"), as.numeric) %>%
+    mutate(new_height = feet + (inch / 12))
+str(bioClean)
+```
+#Part two : tidying(1)
+#1
+#Reformat the defClean data frame into a tidy format using gather.
+#The type of statistic (Tackles_Solo, Tackles_ASST, etc) is added as a 
+#new key column named Statistic.
+```{r}
+defClean <- defClean %>% 
+  gather(key = "Statistics", value = "Score", 3:11)
+```
+
+#2
+#Create a histogram for each defensive statistic. 
+#Use facet_wrap to draw all histograms in a single plot. 
+#What defensive skills are rare?
+```{r}
+defClean %>%
+  ggplot(aes(x = Score, fill=Statistics)) +
+    geom_histogram() + 
+    facet_wrap(~ Statistics)
+```
+
+
+#3
+```{r}
+defClean %>% 
+  filter(Statistics == 'Tackles_Solo',
+         Opponent_Opponent %in% c("West Virginia","Kansas State")) %>%
+  spread(Opponent_Opponent, Score) %>%
+  group_by(Name) %>%
+  summarise(Total_kansas = sum(`Kansas State`),
+            Total_west = sum(`West Virginia`)) %>%
+  ggplot(aes(x=Total_west, y=Total_kansas)) + 
+  geom_point() 
+  
+```
+
+
+#part two: Tidying(2)
+#1
+```{r}
+
+bioClean <- bioClean %>%
+    separate(Hometown, c("City","State"), sep = ",")
+
+head(bioClean)
+```
+#2
+```{r}
+bioClean %>%
+  group_by(State) %>%
+  count()
+```
+
+
+
+
